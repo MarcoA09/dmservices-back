@@ -22,7 +22,7 @@ const app = express();
 
 app.use(cors({
     credentials: true,
-    origin: https://dmservices-front-b7kt.vercel.app,
+    origin: 'https://dmservices-front-b7kt.vercel.app',
 /*     origin: function(origin, callback) {
         ir(!origin || allowedOrigins, indexOF(origin) !== -1) {
             return callback(null, true);
