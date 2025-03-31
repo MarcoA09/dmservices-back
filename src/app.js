@@ -15,7 +15,7 @@ const FRONTEND_URL_I24M = process.env.FRONTEND_URL_I24M;
 const app = express();
 
 const allowedOrigins = [
-  'https://dmservices-front.vercel.app/',
+  'https://dmservices-front.vercel.app',
   'https://dmservices-front-wqqj.vercel.app',
   'https://dmservices-frontt-i24m.vercel.app',
   'https://dmservices-frontt-330b146c0-marcoas-projects-b6ead9da.vercel.app',
@@ -24,11 +24,13 @@ const allowedOrigins = [
 app.use(cors({
   credentials: true, 
   origin: function(origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);  
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.error(`Bloqueado por CORS: ${origin}`); // Log para depurar
+      callback(new Error("Acceso no permitido por CORS"));
     }
-    return callback(new Error('CORS policy does not allow access from this origin'));
-  },
+  }
 }));
 
 app.options('*', cors());
@@ -44,8 +46,9 @@ import reservedRoutes from './routes/reserved.routes.js';
 app.use("/api/", authRoutes);
 app.use("/api/", reservedRoutes);
 
-
-const wss = new WebSocketServer({ server: app }); 
+import { createServer } from 'http';
+const server = createServer(app);  
+const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
   console.log("Cliente conectado al WebSocket");
@@ -71,9 +74,9 @@ wss.on("connection", (ws) => {
 async function main() {
   try {
     await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Servidor activo en puerto: ${PORT}`);
-    });
+    server.listen(PORT, () => {
+    console.log(`Servidor activo en puerto: ${PORT}`);
+});
   } catch (error) {
     console.error("Error al conectar a la base de datos", error);
   }
