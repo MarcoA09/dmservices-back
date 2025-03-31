@@ -66,7 +66,7 @@ wss.on("connection", (ws) => {
 
 
 
-sync function main() {
+async function main() {
   try {
     await connectDB();
     server.listen(PORT, () => {
