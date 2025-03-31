@@ -20,10 +20,6 @@ const allowedOrigins = [
 
 const app = express();
 
-
-const wss = new WebSocketServer({ port: 8080 });
-
-
 app.use(cors({
     credentials: true,
     origin: FRONTEND_URL,
