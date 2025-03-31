@@ -46,13 +46,14 @@ export const register = async (req, res) => {
             sameSite: "None",
         });
 
-        return res.status(201).json({
-            id: userSaved._id,
-            user: userSaved.name,
-            email: userSaved.email,
-            phone: userSaved.phone,
-            message: ["El usuario fue creado exitosamente"],
-      });
+                                 return res.status(201).json({
+                                        token, 
+                                        id: userSaved._id,
+                                        user: userSaved.name,
+                                        email: userSaved.email,
+                                        phone: userSaved.phone,
+                                         message: ["El usuario fue creado exitosamente"],
+                                });
 
         } catch (error) {
             return res.status(500).json({ message: error.message });
