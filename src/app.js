@@ -8,27 +8,25 @@ import reservedRoutes from './routes/reserved.routes.js';
 
 import WebSocket, { WebSocketServer } from 'ws';
 
-const FRONTEND_URL = process.env.FRONTEND_URL; 
-const FRONTEND_URL_WQQJ = process.env.FRONTEND_URL_WQQJ;
-const FRONTEND_URL_I24M = process.env.FRONTEND_URL_I24M;
+
 
 const app = express();
 
 const allowedOrigins = [
-  'https://dmservices-front.vercel.app',
-  'https://dmservices-front-wqqj.vercel.app',
-  'https://dmservices-frontt-i24m.vercel.app',
   'https://dmservices-front-b7kt.vercel.app',
+  'https://dmservices-front.vercel.app',
 ];
  
 app.use(cors({
-  credentials: true, 
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);  
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
-    return callback(new Error('CORS policy does not allow access from this origin'));
+    return callback(new Error('Not allowed by CORS'));
   },
+  credentials: true, // Permite cookies y autenticación
+  methods: 'GET,POST,PUT,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization',
 }));
 
 app.options('*', cors());
