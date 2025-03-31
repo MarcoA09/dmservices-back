@@ -41,7 +41,7 @@ export const register = async (req, res) => {
           });
 
           res.cookie("token", token, {
-            httpOnly: true,  
+            httpOnly: false,  
             secure: true,  
             sameSite: "none",
           });
@@ -120,7 +120,7 @@ export const login = async (req, res) => {
                                     });
                                   
                                     res.cookie("token", token, {
-                                        httpOnly: true, 
+                                        httpOnly: false, 
                                         secure: true, 
                                         sameSite: "none",
                                     });
@@ -258,7 +258,7 @@ export const login = async (req, res) => {
     
                             export const logout = async (req, res) => {
                                 res.cookie("token", "", {
-                                httpOnly: true,
+                                httpOnly: false,
                                 secure: true, 
                                 expires: new Date(0),
                                 });
