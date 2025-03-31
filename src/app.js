@@ -3,7 +3,8 @@ import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './conexion.js';
-
+import authRoutes from './routes/auth.routes.js';
+import reservedRoutes from './routes/reserved.routes.js';
 
 import WebSocket, { WebSocketServer } from 'ws';
 
@@ -24,27 +25,22 @@ const allowedOrigins = [
 app.use(cors({
   credentials: true, 
   origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.error(`Bloqueado por CORS: ${origin}`); // Log para depurar
-      callback(new Error("Acceso no permitido por CORS"));
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);  
     }
-  }
+    return callback(new Error('CORS policy does not allow access from this origin'));
+  },
 }));
 
 app.options('*', cors());
-
 
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-
-import authRoutes from './routes/auth.routes.js';
-import reservedRoutes from './routes/reserved.routes.js';
 app.use("/api/", authRoutes);
 app.use("/api/", reservedRoutes);
+
 
 import { createServer } from 'http';
 const server = createServer(app);  
@@ -53,7 +49,6 @@ const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => {
   console.log("Cliente conectado al WebSocket");
 
-  // Manejo de mensajes del WebSocket
   ws.on("message", (mensaje) => {
     const data = JSON.parse(mensaje);
     if (data.tipo === "nueva-reserva") {
@@ -71,15 +66,4 @@ wss.on("connection", (ws) => {
 });
 
 
-async function main() {
-  try {
-    await connectDB();
-    server.listen(PORT, () => {
-    console.log(`Servidor activo en puerto: ${PORT}`);
-});
-  } catch (error) {
-    console.error("Error al conectar a la base de datos", error);
-  }
-}
-
-main();
+export default app;
