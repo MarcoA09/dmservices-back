@@ -1,0 +1,38 @@
+# Node modules
+node_modules/
+
+# Archivos de dependencias de Yarn
+.yarn/
+
+# Archivos de lock de Yarn y NPM
+yarn.lock
+package-lock.json
+
+# Directorios de compilación
+/dist/
+/build/
+
+# Archivos de logs
+*.log
+npm-debug.log*
+
+# Archivos de entorno (para proteger claves y configuraciones)
+.env
+
+# Archivos temporales de sistemas operativos
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración IDE/Editor (ej. Visual Studio Code)
+.vscode/
+.idea/
+
+# Archivos generados por OS
+*.swp
+*.swo
+
+# Archivos de cobertura (si usas herramientas como Jest, Mocha, etc.)
+coverage/
+
+# Dependencias de dependencia global
+npm-debug.log
