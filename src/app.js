@@ -29,7 +29,7 @@ app.use(cors({
         return callback(new Error('CORS not allowed'), false);
     }
 }));
-app.options('*', cors());
+
 
 app.use(morgan('dev'));
 app.use(express.json());
