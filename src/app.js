@@ -2,8 +2,10 @@ import express from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import {FRONTEND_URL} from './config.js';
-import {PORT} from './config.js';
+/* import {FRONTEND_URL} from './config.js'; 
+import {PORT} from './config.js';*/
+const PORT = process.env.PORT
+const FRONTEND_URL = process.env.FRONTEND_URL;
 import { connectDB } from './conexion.js'
 
 import WebSocket, { WebSocketServer } from 'ws';
@@ -27,16 +29,17 @@ const app = express();
   'https://ev-r-task-manager-front-i24m.vercel.app', 
 ]
  */
+
 app.use(cors({
-    credentials: true,
-    origin: FRONTEND_URL,
-/*     origin: function(origin, callback) {
-        ir(!origin || allowedOrigins, indexOF(origin) !== -1) {
-            return callback(null, true);
-        }
-        return callback(new Error('Cors problem'));
-    }, */
+  credentials: true, 
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);  
+    }
+    return callback(new Error('CORS policy does not allow access from this origin'));
+  },
 }));
+
 
 app.options('*', cors());
 
