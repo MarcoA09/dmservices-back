@@ -41,7 +41,7 @@ export const register = async (req, res) => {
           });
 
           res.cookie("token", token, {
-            httpOnly: false,  
+            httpOnly: true,  
             secure: true,  
             sameSite: "none",
           });
@@ -120,7 +120,7 @@ export const login = async (req, res) => {
                                     });
                                   
                                     res.cookie("token", token, {
-                                        httpOnly: false, 
+                                        httpOnly: true, 
                                         secure: true, 
                                         sameSite: "none",
                                     });
@@ -190,7 +190,7 @@ export const login = async (req, res) => {
                             },
                         });
 
-                        const resetLink = `http://localhost:5173/reset-password/${token}`;
+                        const resetLink = `https://dmservices-front-b7kt.vercel.app/reset-password/${token}`;
 
                         await transporter.sendMail({
                             from: '"Soporte" <2025178001@uteq.edu.mx>',
@@ -258,7 +258,7 @@ export const login = async (req, res) => {
     
                             export const logout = async (req, res) => {
                                 res.cookie("token", "", {
-                                httpOnly: false,
+                                httpOnly: true,
                                 secure: true, 
                                 expires: new Date(0),
                                 });
