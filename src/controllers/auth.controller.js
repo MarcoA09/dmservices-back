@@ -41,11 +41,9 @@ export const register = async (req, res) => {
           });
 
          res.cookie("token", token, {
-    httpOnly: false,  
+    httpOnly: true,  
     secure: true,  
     sameSite: "None",
-    domain: "dmservices-front-b7kt.vercel.app", 
-    path: "/"
 });
 
         return res.status(201).json({
@@ -122,11 +120,9 @@ export const login = async (req, res) => {
                                     });
                                   
                                   res.cookie("token", token, {
-    httpOnly: false,  
+    httpOnly: true,  
     secure: true,  
     sameSite: "None",
-    domain: "dmservices-front-b7kt.vercel.app",
-    path: "/"
 });
                                 
                                     return res.status(201).json({
