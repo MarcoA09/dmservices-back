@@ -21,13 +21,8 @@ const allowedOrigins = [
 const app = express();
 
 app.use(cors({
-    credentials: true,
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error('Cors problem'));
-    }
+    origin: '*', 
+    credentials: true 
 }));
 
 app.options('*', cors());
