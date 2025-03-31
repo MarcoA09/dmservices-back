@@ -8,7 +8,6 @@ import reservedRoutes from './routes/reserved.routes.js';
 
 import WebSocket, { WebSocketServer } from 'ws';
 
-const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL; 
 const FRONTEND_URL_WQQJ = process.env.FRONTEND_URL_WQQJ;
 const FRONTEND_URL_I24M = process.env.FRONTEND_URL_I24M;
