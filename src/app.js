@@ -22,13 +22,12 @@ const app = express();
 
 app.use(cors({
     credentials: true,
-    origin: 'https://dmservices-front-b7kt.vercel.app',
-/*     origin: function(origin, callback) {
-        ir(!origin || allowedOrigins, indexOF(origin) !== -1) {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
         return callback(new Error('Cors problem'));
-    }, */
+    }
 }));
 
 app.options('*', cors());
