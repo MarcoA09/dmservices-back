@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { TOKEN_SECRET } from '../config.js';
+/* import { TOKEN_SECRET } from "../config.js"; */
+
+const TOKEN_SECRET = process.env.TOKEN_SECRET
 import { createAccessToken } from '../utils/jwt.js';
 import { connectDB } from '../conexion.js';
 import bcrypt from 'bcrypt';
