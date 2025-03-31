@@ -5,69 +5,98 @@ import cookieParser from 'cookie-parser';
 import { connectDB } from './conexion.js';
 import authRoutes from './routes/auth.routes.js';
 import reservedRoutes from './routes/reserved.routes.js';
-
+const PORT = process.env.PORT;
 import WebSocket, { WebSocketServer } from 'ws';
 
-
-
-const app = express();
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const FRONTEND_URL_WQQJ = process.env.FRONTEND_URL_WQQJ;
+const FRONTEND_I24M = process.env.FRONTEND_URL_I24M;
 
 const allowedOrigins = [
   'https://dmservices-front-b7kt.vercel.app',
   'https://dmservices-front.vercel.app',
 ];
+ 
+
+const app = express();
+
+import WebSocket, { WebSocketServer } from 'ws';
+const wss = new WebSocketServer({ port: 8080 });
+
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) {
-      // Permite conexiones desde cualquier origen si no hay origen (por ejemplo, cuando se está probando localmente)
-      return callback(null, true);
-    }
-
-    // Verifica si el origen está permitido
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // Si el origen no está permitido, devuelve un error
-    return callback(new Error('Acceso no permitido por CORS'));
-  },
-  credentials: true, // Permite cookies y autenticación
-  methods: 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: 'Content-Type,Authorization',
+    credentials: true,
+    origin: FRONTEND_URL,
+/*     origin: function(origin, callback) {
+        ir(!origin || allowedOrigins, indexOF(origin) !== -1) {
+            return callback(null, true);
+        }
+        return callback(new Error('Cors problem'));
+    }, */
 }));
 
 app.options('*', cors());
 
-
-app.use(morgan("dev"));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/api/", authRoutes);
-app.use("/api/", reservedRoutes);
+
+app.use("/api/", authRoutes)
+app.use("/api/", reservedRoutes)
 
 import { createServer } from "http";
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
-  console.log("Cliente conectado al WebSocket");
+    console.log("Cliente conectado al WebSocket");
+    ws.on("message", (mensaje) => {
+      const data = JSON.parse(mensaje);
+  
+      if (data.tipo === "nueva-reserva") {
+        wss.clients.forEach((cliente) => {
+          if (cliente.readyState === WebSocket.OPEN) {
+            cliente.send(JSON.stringify({ tipo: "actualizar-calendario" }));
+          }
+        });
+      }
+    });
+  
+    ws.on("close", () => {
+      console.log("Cliente desconectado del WebSocket");
+    });
+  });
 
-  ws.on("message", (mensaje) => {
-    const data = JSON.parse(mensaje);
-    if (data.tipo === "nueva-reserva") {
-      wss.clients.forEach((cliente) => {
-        if (cliente.readyState === WebSocket.OPEN) {
-          cliente.send(JSON.stringify({ tipo: "actualizar-calendario" }));
-        }
-      });
+
+
+async function main() {
+    try {
+        await connectDB();
+        app.listen(PORT);
+        console.log(`Servidor activo en puerto: ${PORT}`);
+    } catch (error) {
+        console.log(error);
     }
-  });
+}
 
-  ws.on("close", () => {
-    console.log("Cliente desconectado del WebSocket");
-  });
-});
+main()
 
-export default app;
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
