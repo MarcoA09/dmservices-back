@@ -44,6 +44,7 @@ export const register = async (req, res) => {
             httpOnly: false,  
             secure: true,  
             sameSite: "none",
+            domain: ".vercel.app,
           });
 
         return res.status(201).json({
@@ -123,6 +124,7 @@ export const login = async (req, res) => {
                                         httpOnly: false, 
                                         secure: true, 
                                         sameSite: "none",
+                                        domain: ".vercel.app,
                                     });
                                 
                                     return res.status(201).json({
