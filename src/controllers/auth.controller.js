@@ -41,10 +41,10 @@ export const register = async (req, res) => {
           });
 
          res.cookie("token", token, {
-    httpOnly: true,  
-    secure: true,  
-    sameSite: "None",
-});
+            httpOnly: true,  
+            secure: true,  
+            sameSite: "None",
+        });
 
         return res.status(201).json({
             id: userSaved._id,
@@ -120,10 +120,10 @@ export const login = async (req, res) => {
                                     });
                                   
                                   res.cookie("token", token, {
-    httpOnly: true,  
-    secure: true,  
-    sameSite: "None",
-});
+                                            httpOnly: true,  
+                                            secure: true,  
+                                            sameSite: "None",
+                                        });
                                 
                                     return res.status(201).json({
                                         token, 
@@ -235,7 +235,7 @@ export const login = async (req, res) => {
                                 } 
 
 
-                                export const verifyToken = async (req, res) => {
+                              /*  export const verifyToken = async (req, res) => {
                                     const { token } = req.cookies;
                                     if (!token) return res.send(false);
                                   
@@ -253,7 +253,26 @@ export const login = async (req, res) => {
                                         phone: userFound.phone,
                                       });
                                     });
-                                  };
+                                  }; */
+
+export const verifyToken = async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, TOKEN_SECRET, async (error, user) => {
+        if (error) return res.sendStatus(403);
+        const userFound = await User.findById(user.id);
+        if (!userFound) return res.sendStatus(404);
+
+        res.json({
+                                        id: userFound._id,
+                                        name: userFound.name,
+                                        email: userFound.email,
+                                        rol: userFound.rol,
+                                        phone: userFound.phone,
+                                      });
+    });
+};
 
     
                             export const logout = async (req, res) => {
