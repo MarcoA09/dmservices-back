@@ -47,17 +47,17 @@ const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
     console.log("Cliente conectado al WebSocket");
-    ws.on("message", (mensaje) => {
-      const data = JSON.parse(mensaje);
+  ws.on("message", (mensaje) => {
+    const data = JSON.parse(mensaje);
   
-      if (data.tipo === "nueva-reserva") {
-        wss.clients.forEach((cliente) => {
-          if (cliente.readyState === WebSocket.OPEN) {
-            cliente.send(JSON.stringify({ tipo: "actualizar-calendario" }));
-          }
-        });
-      }
-    });
+    if (data.tipo === "nueva-reserva") {
+      wss.clients.forEach((cliente) => {
+        if (cliente.readyState === WebSocket.OPEN) {
+          cliente.send(JSON.stringify({ tipo: "actualizar-calendario" }));
+        }
+      });
+    }
+  });
   
     ws.on("close", () => {
       console.log("Cliente desconectado del WebSocket");
@@ -66,14 +66,15 @@ wss.on("connection", (ws) => {
 
 
 
-async function main() {
-    try {
-        await connectDB();
-        app.listen(PORT);
-        console.log(`Servidor activo en puerto: ${PORT}`);
-    } catch (error) {
-        console.log(error);
-    }
+sync function main() {
+  try {
+    await connectDB();
+    server.listen(PORT, () => {
+      console.log(`Servidor activo en puerto: ${PORT}`);
+    });
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 main()
