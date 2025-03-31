@@ -16,31 +16,33 @@ const allowedOrigins = [
   'https://dmservices-front-b7kt.vercel.app',
   'https://dmservices-front.vercel.app',
 ];
- 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true, // Permite cookies y autenticación
-  methods: 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: 'Content-Type,Authorization',
-}));
 
-app.options('*', cors());
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
 
-app.use(morgan('dev'));
+  // Si es una solicitud OPTIONS, responder con éxito antes de continuar.
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/", authRoutes);
 app.use("/api/", reservedRoutes);
 
-
-import { createServer } from 'http';
-const server = createServer(app);  
+import { createServer } from "http";
+const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws) => {
@@ -61,6 +63,8 @@ wss.on("connection", (ws) => {
     console.log("Cliente desconectado del WebSocket");
   });
 });
+
+export default app;
 
 
 export default app;
