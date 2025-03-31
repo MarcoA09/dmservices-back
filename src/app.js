@@ -21,10 +21,14 @@ const allowedOrigins = [
 const app = express();
 
 app.use(cors({
-    origin: '*', 
-    credentials: true 
+    credentials: true,
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('CORS not allowed'), false);
+    }
 }));
-
 app.options('*', cors());
 
 app.use(morgan('dev'));
