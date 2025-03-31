@@ -40,12 +40,13 @@ export const register = async (req, res) => {
             id: userSaved._id,
           });
 
-          res.cookie("token", token, {
-            httpOnly: false,  
-            secure: true,  
-            sameSite: "none",
-            domain: ".vercel.app",
-          });
+         res.cookie("token", token, {
+    httpOnly: false,  
+    secure: true,  
+    sameSite: "None",
+    domain: "dmservices-front-b7kt.vercel.app", 
+    path: "/"
+});
 
         return res.status(201).json({
             id: userSaved._id,
@@ -120,12 +121,13 @@ export const login = async (req, res) => {
                                         phone: userFound.phone,
                                     });
                                   
-                                    res.cookie("token", token, {
-                                        httpOnly: false, 
-                                        secure: true, 
-                                        sameSite: "none",
-                                        domain: ".vercel.app",
-                                    });
+                                  res.cookie("token", token, {
+    httpOnly: false,  
+    secure: true,  
+    sameSite: "None",
+    domain: "dmservices-front-b7kt.vercel.app",
+    path: "/"
+});
                                 
                                     return res.status(201).json({
                                         token, 
