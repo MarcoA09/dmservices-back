@@ -17,22 +17,28 @@ const allowedOrigins = [
   'https://dmservices-front.vercel.app',
 ];
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-  }
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) {
+      // Permite conexiones desde cualquier origen si no hay origen (por ejemplo, cuando se está probando localmente)
+      return callback(null, true);
+    }
 
-  // Si es una solicitud OPTIONS, responder con éxito antes de continuar.
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+    // Verifica si el origen está permitido
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-  next();
-});
+    // Si el origen no está permitido, devuelve un error
+    return callback(new Error('Acceso no permitido por CORS'));
+  },
+  credentials: true, // Permite cookies y autenticación
+  methods: 'GET,POST,PUT,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization',
+}));
+
+app.options('*', cors());
+
 
 app.use(morgan("dev"));
 app.use(express.json());
