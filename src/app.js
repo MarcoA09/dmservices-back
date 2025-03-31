@@ -19,7 +19,7 @@ const allowedOrigins = [
   'https://dmservices-front.vercel.app',
   'https://dmservices-front-wqqj.vercel.app',
   'https://dmservices-frontt-i24m.vercel.app',
-  'https://dmservices-frontt-330b146c0-marcoas-projects-b6ead9da.vercel.app',
+  'https://dmservices-front-b7kt.vercel.app',
 ];
  
 app.use(cors({
