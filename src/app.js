@@ -65,6 +65,3 @@ wss.on("connection", (ws) => {
 });
 
 export default app;
-
-
-export default app;
