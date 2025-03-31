@@ -9,21 +9,31 @@ import WebSocket, { WebSocketServer } from 'ws';
 
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL; 
+const FRONTEND_URL_WQQJ = process.env.FRONTEND_URL_WQQJ;
+const FRONTEND_URL_I24M = process.env.FRONTEND_URL_I24M;
 
 const app = express();
 
-
+const allowedOrigins = [
+  'https://dmservices-front.vercel.app/',
+  'https://dmservices-front-wqqj.vercel.app',
+  'https://dmservices-frontt-i24m.vercel.app',
+  'https://dmservices-frontt-330b146c0-marcoas-projects-b6ead9da.vercel.app',
+];
+ 
 app.use(cors({
-  credentials: true,
+  credentials: true, 
   origin: function(origin, callback) {
-    if (!origin || FRONTEND_URL.indexOf(origin) !== -1) {
-      return callback(null, true);
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);  
     }
     return callback(new Error('CORS policy does not allow access from this origin'));
-  }
+  },
 }));
 
 app.options('*', cors());
+
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
