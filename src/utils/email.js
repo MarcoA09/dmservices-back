@@ -8,8 +8,8 @@ export const sendVerificationEmail = async (email, verificationLink) => {
         port: 587,
         secure: false,
         auth: {
-            user: "2025178001@uteq.edu.mx",
-            pass: "*Ma06dp27*0609",
+            user: EMAIL_USER,
+            pass: EMAIL_PASS,
       },
     });
 
