@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
       intentos: {
         type: Number,
       },
+       emailVerified: { 
+        type: Boolean, 
+        default: false,
+       } 
   },
   {
     timestamps: true,
