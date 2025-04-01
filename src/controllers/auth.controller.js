@@ -3,20 +3,20 @@ import jwt from 'jsonwebtoken';
 
 const TOKEN_SECRET = process.env.TOKEN_SECRET
 import { createAccessToken } from '../utils/jwt.js';
-import { connectDB } from '../conexion.js';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 import  nodemailer  from 'nodemailer';
 import User from "../models/user.model.js";
 import Subs from "../models/subscriptor.model.js";
-import { clearScreenDown } from 'readline';
+import { admin } from "../firebase.js";
+import { sendVerificationEmail } from "../utils/email.js";
+
 
 export const register = async (req, res) => {
     try {
-        const { name, email, password, phone} = req.body;
+        const { name, email, password, phone } = req.body;
         const userFound = await User.findOne({ email });
-        const rol = "Cliente";
-       
+
         if (userFound) {
             return res.status(400).json({
                 message: ["El usuario ya existe, utilice un correo diferente"],
@@ -29,141 +29,178 @@ export const register = async (req, res) => {
             name,
             email,
             password: passwordHashed,
-            rol,
+            rol: "Cliente",
             phone,
-            createdAt: new Date()
+            createdAt: new Date(),
         });
 
         const userSaved = await newUser.save();
 
-        const token = await createAccessToken({
-            id: userSaved._id,
-          });
-
-         res.cookie("token", token, {
-            httpOnly: true,  
-            secure: true,  
-            sameSite: "None",
+        const userFirebase = await admin.auth().createUser({
+            email: email,
+            password: password,
+            emailVerified: false, 
         });
 
-                                 return res.status(201).json({
-                                        token, 
-                                        id: userSaved._id,
-                                        user: userSaved.name,
-                                        email: userSaved.email,
-                                        phone: userSaved.phone,
-                                         message: ["El usuario fue creado exitosamente"],
-                                });
+      
+        const actionCodeSettings = {
+            url: `https://dmservices-front-b7kt.vercel.app/verify-email?email=${email}`, 
+            handleCodeInApp: true, 
+        };
 
-        } catch (error) {
-            return res.status(500).json({ message: error.message });
-          }
-        }
+        const verificationLink = await admin.auth().generateEmailVerificationLink(email, actionCodeSettings);
+        await sendVerificationEmail(email, verificationLink);
+
+        console.log("Enlace de verificación:", verificationLink);
+
+        const token = await createAccessToken({
+            id: userSaved._id,
+        });
+
+        res.cookie("token", token, {
+            httpOnly: false,  
+            secure: true,  
+            sameSite: "none",
+        });
+
+        return res.status(201).json({
+            id: userSaved._id,
+            user: userSaved.name,
+            email: userSaved.email,
+            phone: userSaved.phone,
+            message: ["El usuario fue creado exitosamente. Revisa tu correo para verificarlo."],
+        });
+
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
 
 
-export const login = async (req, res) => {
-    try {
-        const { email, password} = req.body;
-        const userFound = await User.findOne({ email });
-        if (!userFound) {
-            return res.status(400).json({
-                message: ["El usuario no existe, utilice un correo registrado o registrelo"],
-            });
-        }
-
-        if(userFound.bloqueado && userFound.bloqueado <= Date.now()) {
-           
-            await User.updateOne(
-                { email: email},
-                { $set: { intentos: 0, bloqueado: null}}
-            );
-            userFound.intentos = 0;
-            userFound.bloqueado = null;
-        }
-
-            if(userFound.bloqueado && userFound.bloqueado > Date.now()) {
-                const tiempoRest = Math.ceil((userFound.bloqueado - Date.now()) / 1000);
-                const fecha = new Date().toDateString();
-                const hora = new Date().getHours();
-                const minutos = new Date().getMinutes();
-                const infolog = `Se bloqueo al usuario: ${email} por 3 intentos fallidos a las ${fecha} - ${hora}:${minutos}.\n`;
-
-                    try{
-                        if(!fs.existsSync('log.txt')) {
-                            console.log("El archivo de Log no existe el archivo...");
-                            await fs.promises.writeFile("log.txt", infolog) 
-                            console.log("Se ha creado el archivo log.txt...");
-                        } else {
-                            await fs.promises.appendFile('log.txt', infolog);
-                            console.log("Se añadió la información del nuevo intento...");
-                        }
-
-                        return res.status(403).json({
-                            message: [`Cuenta bloqueada por intentos fallidos, espero ${tiempoRest} o resetee la contraseña`],
-                        });
-
-                        } catch (err) {
-                            console.log('Error en el inicio de sesión', err);
-                            return res.status(500).json({
-                                message: ["Hubo un problema al crear el archivo de log"],
-                            });
-                                }
+        export const verifyEmail = async (req, res) => {
+            try {
+                const { email } = req.body;
+        
+                const userFirebase = await admin.auth().getUserByEmail(email);
+        
+                if (!userFirebase.emailVerified) {
+                    return res.status(400).json({ message: "Tu correo aún no ha sido verificado en Firebase." });
+                }
+        
+                const updatedUser = await User.findOneAndUpdate(
+                    { email },
+                    { emailVerified: true },
+                    { new: true }
+                );
+        
+                if (!updatedUser) return res.status(404).json({ message: "Usuario no encontrado." });
+        
+                res.json({ success: true, message: "Correo verificado y sincronizado." });
+        
+            } catch (error) {
+                return res.status(500).json({ message: error.message });
             }
-
-                            const isMatch = await bcrypt.compare(password, userFound.password);
-                            if(isMatch) {
-                                await User.updateOne({ email: email }, { $set: { intentos: 0, bloqueado: null}});
-                                    const token = await createAccessToken({
-                                        id: userFound._id,
-                                        name: userFound.name,
-                                        rol: userFound.rol,
-                                        phone: userFound.phone,
-                                    });
-                                  
-                                  res.cookie("token", token, {
-                                            httpOnly: true,  
-                                            secure: true,  
-                                            sameSite: "None",
-                                        });
-                                
-                                    return res.status(201).json({
-                                        token, 
-                                        id: userFound._id,
-                                        name: userFound.name,
-                                        email: userFound.email,
-                                        rol: userFound.rol,
-                                        phone: userFound.phone,
-                                    message: [`Hola ${userFound.name}, has iniciado sesion correctamente`],
-                                });
-
-                                } else {
-                                
-                                const intentos = (userFound.intentos || 0) + 1;
-
-                                    if(intentos >= 3) {
-                                        const tiempoBloqueo = Date.now() + (1 * 60 * 1000);
-                                        await User.updateOne(
-                                            {email:email},
-                                            {$set: { intentos: intentos, bloqueado: tiempoBloqueo }}
-                                        );
-                                        return res.status(403).json({
-                                            message: ["Cuenta bloqueada por intentos fallidos, espera 1 minuto o reinicia la contraseña."],
-                                        });
-                                    } else {
-                                        await User.updateOne(
-                                            {email: email},
-                                            {$set: { intentos: intentos}}
-                                        );
-                                    }
-
-                                return res.status(400).json({
-                                    message: ["La contraseña es incorrecta, verifique su contraseña y vuela a intentarlo."],
-                                });
-                                }
-                            } catch (error) {
-                                return res.status(500).json({ message: error.message });
-                            }
-                            }
+        };
+        
+  export const login = async (req, res) => {
+            try {
+                const { email, password } = req.body;
+    
+                const userRecord = await admin.auth().getUserByEmail(email);
+                if (!userRecord) {
+                    return res.status(400).json({ message: "Usuario no encontrado en Firebase" });
+                }
+    
+                if (!userRecord.emailVerified) {
+                    return res.status(403).json({ message: "Debes verificar tu correo antes de iniciar sesión." });
+                }
+        
+                const userFound = await User.findOne({ email });
+                if (!userFound) {
+                    return res.status(400).json({
+                        message: ["El usuario no existe, utilice un correo registrado o registrelo"],
+                    });
+                }
+        
+                if (userFound.bloqueado && userFound.bloqueado <= Date.now()) {
+                    await User.updateOne({ email }, { $set: { intentos: 0, bloqueado: null } });
+                    userFound.intentos = 0;
+                    userFound.bloqueado = null;
+                }
+        
+                if (userFound.bloqueado && userFound.bloqueado > Date.now()) {
+                    const tiempoRest = Math.ceil((userFound.bloqueado - Date.now()) / 1000);
+                    const fecha = new Date().toDateString();
+                    const hora = new Date().getHours();
+                    const minutos = new Date().getMinutes();
+                    const infolog = `Se bloqueó al usuario: ${email} por 3 intentos fallidos a las ${fecha} - ${hora}:${minutos}.\n`;
+        
+                    try {
+                        if (!fs.existsSync("log.txt")) {
+                            console.log("El archivo de Log no existe, creándolo...");
+                            await fs.promises.writeFile("log.txt", infolog);
+                        } else {
+                            await fs.promises.appendFile("log.txt", infolog);
+                        }
+        
+                        return res.status(403).json({
+                            message: [`Cuenta bloqueada por intentos fallidos, espera ${tiempoRest} segundos o resetea la contraseña.`],
+                        });
+        
+                    } catch (err) {
+                        console.log("Error en el inicio de sesión", err);
+                        return res.status(500).json({ message: ["Hubo un problema al crear el archivo de log"] });
+                    }
+                }
+        
+                const isMatch = await bcrypt.compare(password, userFound.password);
+                if (isMatch) {
+                    await User.updateOne({ email }, { $set: { intentos: 0, bloqueado: null } });
+        
+                    const token = await createAccessToken({
+                        id: userFound._id,
+                        name: userFound.name,
+                        rol: userFound.rol,
+                        phone: userFound.phone,
+                    });
+        
+                    res.cookie("token", token, {
+                        httpOnly: false,
+                        secure: true,
+                        sameSite: "none",
+                    });
+        
+                    return res.status(201).json({
+                        token,
+                        id: userFound._id,
+                        name: userFound.name,
+                        email: userFound.email,
+                        rol: userFound.rol,
+                        phone: userFound.phone,
+                        message: [`Hola ${userFound.name}, has iniciado sesión correctamente`],
+                    });
+        
+                } else {
+                    const intentos = (userFound.intentos || 0) + 1;
+                    if (intentos >= 3) {
+                        const tiempoBloqueo = Date.now() + 1 * 60 * 1000;
+                        await User.updateOne({ email }, { $set: { intentos, bloqueado: tiempoBloqueo } });
+        
+                        return res.status(403).json({
+                            message: ["Cuenta bloqueada por intentos fallidos, espera 1 minuto o reinicia la contraseña."],
+                        });
+                    } else {
+                        await User.updateOne({ email }, { $set: { intentos } });
+                    }
+        
+                    return res.status(400).json({ message: ["La contraseña es incorrecta, verifícala e intenta de nuevo."] });
+                }
+        
+            } catch (error) {
+                return res.status(500).json({ message: error.message });
+            }
+        };
+        
         
 
 
@@ -235,45 +272,34 @@ export const login = async (req, res) => {
                                 }
                                 } 
 
-
-                              /*  export const verifyToken = async (req, res) => {
-                                    const { token } = req.cookies;
-                                    if (!token) return res.send(false);
-                                  
+   export const verifyToken = async (req, res) => {
+                                    const token = req.headers.authorization?.split(" ")[1];
+                                    if (!token) return res.sendStatus(401);
+                                
                                     jwt.verify(token, TOKEN_SECRET, async (error, user) => {
-                                      if (error) return res.sendStatus(401);
-                                  
-                                      const userFound = await User.findById(user.id);
-                                      if (!userFound) return res.sendStatus(401);
-                                  
-                                      return res.json({
-                                        id: userFound._id,
-                                        name: userFound.name,
-                                        email: userFound.email,
-                                        rol: userFound.rol,
-                                        phone: userFound.phone,
-                                      });
+                                        if (error) return res.sendStatus(403);
+                                
+                                    
+                                        const userFound = await User.findById(user.id);
+                                        if (!userFound) return res.sendStatus(404);
+                                
+                                    
+                                        if (!userFound.emailVerified) {
+                                            return res.status(400).json({ message: "Por favor, verifique su correo electrónico." });
+                                        }
+                                
+                                    
+                                        res.json({
+                                            id: userFound._id,
+                                            name: userFound.name,
+                                            email: userFound.email,
+                                            rol: userFound.rol,
+                                            phone: userFound.phone,
+                                            emailVerified: userFound.emailVerified, 
+                                        });
                                     });
-                                  }; */
-
-export const verifyToken = async (req, res) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.sendStatus(401);
-
-    jwt.verify(token, TOKEN_SECRET, async (error, user) => {
-        if (error) return res.sendStatus(403);
-        const userFound = await User.findById(user.id);
-        if (!userFound) return res.sendStatus(404);
-
-        res.json({
-                                        id: userFound._id,
-                                        name: userFound.name,
-                                        email: userFound.email,
-                                        rol: userFound.rol,
-                                        phone: userFound.phone,
-                                      });
-    });
-};
+                                };
+                                
 
     
                             export const logout = async (req, res) => {
@@ -298,8 +324,8 @@ export const verifyToken = async (req, res) => {
                                         port: 587,
                                         secure: false,
                                         auth: {
-                                            user: "2025178001@uteq.edu.mx",
-                                            pass: "*Ma06dp27*0609",
+                                            user: process.env.EMAIL_USER,
+                                            pass: process.env.EMAIL_PASS,
                                         },
                                     });
             
