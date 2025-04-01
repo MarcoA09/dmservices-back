@@ -186,8 +186,8 @@ export const login = async (req, res) => {
                             port: 587,
                             secure: false,
                             auth: {
-                                user: "2025178001@uteq.edu.mx",
-                                pass: "*Ma06dp27*0609",
+                                user: process.env.EMAIL_USER,
+                                pass: process.env.EMAIL_PASS,
                             },
                         });
 
